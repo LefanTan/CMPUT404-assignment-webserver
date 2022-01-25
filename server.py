@@ -1,7 +1,7 @@
 #  coding: utf-8 
 from cgitb import html
 import socketserver
-from urllib import response
+from urllib import response,parse
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -38,7 +38,14 @@ class MyWebServer(socketserver.BaseRequestHandler):
         print (self.data)
 
         request = self.data.split('\r\n')[0].split(' ')
-        path = request[1]
+        slash_index = request[1].find("../")
+        
+        # remove trailing path if exists
+        if(slash_index == -1):
+            path = request[1]
+        else: 
+            path = request[1][slash_index+1:]
+
         method = request[0]
         mimetype = "text/html"
 
