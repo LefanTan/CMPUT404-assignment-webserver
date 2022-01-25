@@ -1,5 +1,7 @@
 #  coding: utf-8 
+from cgitb import html
 import socketserver
+from urllib import response
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -28,11 +30,40 @@ import socketserver
 
 
 class MyWebServer(socketserver.BaseRequestHandler):
-    
+
     def handle(self):
-        self.data = self.request.recv(1024).strip()
-        print ("Got a request of: %s\n" % self.data)
-        self.request.sendall(bytearray("OK",'utf-8'))
+        self.data = self.request.recv(1024).strip().decode()
+        print("---------------------------------------")
+        # Print request headers
+        print (self.data)
+
+        request = self.data.split('\r\n')[0].split(' ')
+        path = request[1]
+        method = request[0]
+        mimetype = "text/html"
+
+        if(method != 'GET'):
+            response = 'HTTP/1.1 405 Method Not Allowed\r\n\r\n'
+        else: 
+            try:
+                if(path.endswith("/")):
+                    path += "index.html"
+
+                file = open("www" + path)
+
+                if(path.endswith("html")):
+                    mimetype = "text/html"
+                elif(path.endswith("css")):
+                    mimetype = "text/css"  
+
+                response = 'HTTP/1.1 200 OK\r\nContent-Type: {0}; charset=utf-8\r\n\r\n'.format(mimetype) + file.read()
+            except FileNotFoundError:
+                response = 'HTTP/1.1 404 Not Found\r\nContent-Type: {0}; charset=utf-8\r\n\r\nFile {1} not found'.format(mimetype, path) 
+            except IsADirectoryError:
+                response = 'HTTP/1.1 301 Moved Permanently\r\nContent-Type: {0}; charset=utf-8\r\nLocation: {1}\r\n\r\nRedirecting'.format(mimetype, path + "/")
+
+        self.request.sendall(response.encode())
+        self.request.close()
 
 if __name__ == "__main__":
     HOST, PORT = "localhost", 8080
