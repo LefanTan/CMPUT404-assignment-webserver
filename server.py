@@ -1,7 +1,10 @@
 #  coding: utf-8 
 from cgitb import html
+from datetime import datetime
 import socketserver
+import mimetypes
 from urllib import response,parse
+from urllib.parse import unquote
 
 # Copyright 2013 Abram Hindle, Eddie Antonio Santos
 # 
@@ -45,9 +48,11 @@ class MyWebServer(socketserver.BaseRequestHandler):
             path = request[1]
         else: 
             path = request[1][slash_index+1:]
+        path = unquote(path)
 
         method = request[0]
-        mimetype = "text/html"
+        mimetype = "application/octet-stream"
+        file_content = ""
 
         if(method != 'GET'):
             response = 'HTTP/1.1 405 Method Not Allowed\r\n\r\n'
@@ -56,20 +61,22 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 if(path.endswith("/")):
                     path += "index.html"
 
-                file = open("www" + path)
+                file = open("www" + path, "rb")
+                file_content = file.read()
+                mimetype = mimetypes.guess_type(path)[0]
+                print(mimetype)
 
-                if(path.endswith("html")):
-                    mimetype = "text/html"
-                elif(path.endswith("css")):
-                    mimetype = "text/css"  
-
-                response = 'HTTP/1.1 200 OK\r\nContent-Type: {0}; charset=utf-8\r\n\r\n'.format(mimetype) + file.read()
+                response = 'HTTP/1.1 200 OK\r\nContent-Type: {0}\r\nDate: {1}\r\n\r\n'.format(mimetype, datetime.now())
             except FileNotFoundError:
-                response = 'HTTP/1.1 404 Not Found\r\nContent-Type: {0}; charset=utf-8\r\n\r\nFile {1} not found'.format(mimetype, path) 
+                response = 'HTTP/1.1 404 Not Found\r\nContent-Type: text/html; charset=utf-8\r\nDate: {1}\r\n\r\nFile {0} not found'.format(path, datetime.now()) 
             except IsADirectoryError:
-                response = 'HTTP/1.1 301 Moved Permanently\r\nContent-Type: {0}; charset=utf-8\r\nLocation: {1}\r\n\r\nRedirecting'.format(mimetype, path + "/")
+                response = 'HTTP/1.1 301 Moved Permanently\r\nContent-Type: text/html; charset=utf-8\r\nDate: {1}\r\nLocation: {0}\r\n\r\nRedirecting'.format(path + "/", datetime.now())
 
         self.request.sendall(response.encode())
+
+        if(file_content != ""):
+            self.request.sendall(file_content)
+
         self.request.close()
 
 if __name__ == "__main__":
