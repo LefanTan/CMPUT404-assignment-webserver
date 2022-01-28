@@ -66,12 +66,12 @@ class MyWebServer(socketserver.BaseRequestHandler):
                 mimetype = mimetypes.guess_type(path)[0]
                 print(mimetype)
 
-                response = 'HTTP/1.1 200 OK\r\nContent-Type: {0}\r\nContent-Length: {1}\r\nDate: {2}\r\n\r\n'.format(mimetype, len(file_content) ,datetime.now())
+                response = 'HTTP/1.1 200 OK\r\nServer: Lefan\'s Server\r\nContent-Type: {0}\r\nContent-Length: {1}\r\nDate: {2}\r\n\r\n'.format(mimetype, len(file_content) ,datetime.now())
             except FileNotFoundError:
                 error_message = f"File {path} not found"
-                response = 'HTTP/1.1 404 Not Found\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {2}\r\nDate: {1}\r\n\r\n{0}'.format(error_message, datetime.now(), len(error_message)) 
+                response = 'HTTP/1.1 404 Not Found\r\nServer: Lefan\'s Server\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {2}\r\nDate: {1}\r\n\r\n{0}'.format(error_message, datetime.now(), len(error_message)) 
             except IsADirectoryError:
-                response = 'HTTP/1.1 301 Moved Permanently\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {2}\r\nDate: {1}\r\nLocation: {0}\r\n\r\nRedirecting'.format(path + "/", datetime.now(), len("Redirecting"))
+                response = 'HTTP/1.1 301 Moved Permanently\r\nServer: Lefan\'s Server\r\nContent-Type: text/html; charset=utf-8\r\nContent-Length: {2}\r\nDate: {1}\r\nLocation: {0}\r\n\r\nRedirecting'.format(path + "/", datetime.now(), len("Redirecting"))
 
         self.request.sendall(response.encode())
 
